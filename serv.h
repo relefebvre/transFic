@@ -22,5 +22,6 @@ void init_sockaddr (struct sockaddr_in *name,
 void closeAllSockets(list<Client*> client);
 void closeAllFd(list<int> fd);
 void addAllSockets(list<Client*> client, fd_set *readfd, int sock);
+void removeAllClient(list<Client*> client);
                
            
