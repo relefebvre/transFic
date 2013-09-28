@@ -53,6 +53,15 @@ void addAllSockets(list<Client*> client, fd_set *readfd, int sock)
 	}
 }
 
+void removeAllClient(list<Client*> client)
+{
+	for(list<Client*>::iterator i=client.begin(); i != client.end() ; )
+	{
+			delete *i;
+			i = client.erase(i);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	char buf[4096];
@@ -112,6 +121,8 @@ int main(int argc, char **argv)
 			closeAllSockets(client);
 			closeAllFd(fd);
 			close(sock);
+			removeAllClient(client);
+			fd.erase(fd.begin(),fd.end());
 			exit(1);
 		}
 			
@@ -144,6 +155,8 @@ int main(int argc, char **argv)
 						closeAllSockets(client);
 						closeAllFd(fd);
 						close(sock) ;
+						removeAllClient(client);
+						fd.erase(fd.begin(),fd.end());
 						exit(1) ;
 					}
 					fd.push_front((*i)->getFd());
@@ -161,6 +174,8 @@ int main(int argc, char **argv)
 								closeAllSockets(client);
 								closeAllFd(fd);
 								close(sock) ;
+								removeAllClient(client);
+								fd.erase(fd.begin(),fd.end());
 								exit(1) ;
 							}
 				
@@ -170,6 +185,8 @@ int main(int argc, char **argv)
 								closeAllSockets(client);
 								closeAllFd(fd);
 								close(sock) ;
+								removeAllClient(client);
+								fd.erase(fd.begin(),fd.end());
 								exit(1) ;
 							}
 						}
@@ -177,6 +194,7 @@ int main(int argc, char **argv)
 						{
                             close((*i)->getSock()) ;
                             close((*i)->getFd()) ;
+                            delete *i;
 							i = client.erase(i);
 							continue;
 						}
@@ -197,7 +215,7 @@ int main(int argc, char **argv)
 	closeAllFd(fd);
 	close(sock);
 	
-	client.erase(client.begin(),client.end());
+	removeAllClient(client);
 	fd.erase(fd.begin(),fd.end());
 	
 	return 0;
