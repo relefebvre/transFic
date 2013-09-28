@@ -1,12 +1,15 @@
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <time.h>
 
 
 void init_sockaddr (struct sockaddr_in *name,
@@ -28,11 +31,15 @@ void init_sockaddr (struct sockaddr_in *name,
 
 int main(int argc, char **argv)
 {
-	char *buf, next='o';
-	int fic, nbLu=1, tbuf;
+	char *buf, next='o', barre[26];
+	int fic, nbLu=1, tbuf, i=0, tot=0, prog, tfic;
+	struct stat info;
     int sock ;
 	struct sockaddr_in sin;
+	struct timespec time;
 	char IPdefault[10] = "127.0.0.1" ;
+	
+	time.tv_nsec = 100;
 	
 	if (argc < 2)
 	{
@@ -83,8 +90,23 @@ int main(int argc, char **argv)
 		scanf("%s",buf);
 		write(sock,buf,tbuf);
 		
+		if (strcmp(buf,"break") == 0)
+		{
+			printf("Fermeture du server\n");
+			close(sock);
+			return 0;
+		}
+		
 		printf("Emplacement du fichier à ouvrir : ");
 		scanf("%s",buf);
+		
+		if (stat(buf,&info) == -1)
+		{
+			perror("Informations fichier ");
+			close(sock);
+			exit(1);
+		}
+		tfic = info.st_size;
 		
 		fic = open(buf,O_RDONLY);
 		
@@ -95,9 +117,11 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 		
+		
 		while(nbLu > 0)
 		{
 			nbLu = read(fic,buf,sizeof(buf));
+			tot = tot + nbLu;
 			if (nbLu == -1)
 			{
 				perror("Lecture ");
@@ -105,6 +129,7 @@ int main(int argc, char **argv)
 				close(fic);
 				exit(1) ;
 			}
+			
 			
 			if (write(sock,buf,nbLu) == -1)
 			{
@@ -114,12 +139,25 @@ int main(int argc, char **argv)
 				exit(1);
 			}
 			
+			prog = ((tot*100)/tfic)/4;
+				
+			for ( ; i<prog ; ++i)
+				barre[i]='-';
+				
+			barre[prog]='\0';
+				
+			nanosleep(&time,NULL);	
+			fflush(stdout);
+			printf("\r%s%d%%",barre,prog*4);
+			
+				
+			
 		}
 		
         close(sock) ;
         close(fic) ;
         nbLu = 1 ;
-	printf("Envoyer un autre fichier (O/N) ? ");
+	printf("\nEnvoyer un autre fichier (O/N) ? ");
 	scanf("%*c%c",&next);
 		
 	}

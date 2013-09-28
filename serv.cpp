@@ -53,15 +53,6 @@ void addAllSockets(list<Client*> client, fd_set *readfd, int sock)
 	}
 }
 
-void removeAllClient(list<Client*> client)
-{
-	for(list<Client*>::iterator i=client.begin(); i != client.end() ; )
-	{
-			delete *i;
-			i = client.erase(i);
-	}
-}
-
 int main(int argc, char **argv)
 {
 	char buf[4096];
@@ -73,20 +64,20 @@ int main(int argc, char **argv)
 	list<Client*> client; 
 	list<int> fd;
 	fd_set readfd;
-	
-	if (argc < 2)
+
+    if(argc >= 2 )
+        if ( sscanf(argv[1],"%u",&port) != 1  )
+        {
+            fprintf(stderr,"Numéro de port invalide\n");
+            close(sock);
+            exit(1);
+        }
+
+    if (argc < 2)
 	{
-		fprintf(stderr,"Argument invalide, numéro de port manquant\n"); 
-		close(sock);
-		exit(1);
+        port = 1025 ;
 	}
 	
-	if ( sscanf(argv[1],"%u",&port) != 1  )
-	{
-		fprintf(stderr,"Numéro de port invalide\n"); 
-		close(sock);
-		exit(1);
-	}
 	
 	if (sock+1 > Client::maxSock)
 		Client::maxSock = sock+1;
@@ -121,8 +112,6 @@ int main(int argc, char **argv)
 			closeAllSockets(client);
 			closeAllFd(fd);
 			close(sock);
-			removeAllClient(client);
-			fd.erase(fd.begin(),fd.end());
 			exit(1);
 		}
 			
@@ -146,6 +135,13 @@ int main(int argc, char **argv)
 				if ((*i)->getFirst())
 				{
 					read((*i)->getSock(),buf,sizeof(buf));
+					
+					if(strcmp(buf,"break") == 0)
+					{
+						printf("Fermeture du server\n");
+						goto end;
+					}
+						
 					(*i)->setFilename(buf);
 					(*i)->setFd(open(buf,O_CREAT | O_WRONLY, S_IRWXU));
 					printf("Création du fichier : %s\n",buf);
@@ -155,8 +151,6 @@ int main(int argc, char **argv)
 						closeAllSockets(client);
 						closeAllFd(fd);
 						close(sock) ;
-						removeAllClient(client);
-						fd.erase(fd.begin(),fd.end());
 						exit(1) ;
 					}
 					fd.push_front((*i)->getFd());
@@ -174,8 +168,6 @@ int main(int argc, char **argv)
 								closeAllSockets(client);
 								closeAllFd(fd);
 								close(sock) ;
-								removeAllClient(client);
-								fd.erase(fd.begin(),fd.end());
 								exit(1) ;
 							}
 				
@@ -185,17 +177,27 @@ int main(int argc, char **argv)
 								closeAllSockets(client);
 								closeAllFd(fd);
 								close(sock) ;
-								removeAllClient(client);
-								fd.erase(fd.begin(),fd.end());
 								exit(1) ;
 							}
 						}
 						if (nbLu == 0)
 						{
-                            close((*i)->getSock()) ;
+							list<int>::iterator it=fd.begin(); 
+							
+                            close((*i)->getSock()) ;                      
+                            
+                            while (it != fd.end())
+                            {
+								if ((*i)->getFd() == (*it))
+									it = fd.erase(it);
+								else
+									++it;
+							}
+                            
                             close((*i)->getFd()) ;
-                            delete *i;
+                            
 							i = client.erase(i);
+							
 							continue;
 						}
 						else 
@@ -210,12 +212,13 @@ int main(int argc, char **argv)
 		}
 	}
 
+	end:;
 	
 	closeAllSockets(client);
 	closeAllFd(fd);
 	close(sock);
 	
-	removeAllClient(client);
+	client.erase(client.begin(),client.end());
 	fd.erase(fd.begin(),fd.end());
 	
 	return 0;
