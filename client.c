@@ -8,7 +8,6 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#define PORT 1024
 
 void init_sockaddr (struct sockaddr_in *name,
                const char *hostname,
@@ -31,44 +30,60 @@ int main(int argc, char **argv)
 {
 	char *buf, next='o';
 	int fic, nbLu=1, tbuf;
-	int sock=socket(AF_INET,SOCK_STREAM,0);
+    int sock ;
 	struct sockaddr_in sin;
+	char IPdefault[10] = "127.0.0.1" ;
 	
-	init_sockaddr(&sin,"0.0.0.0",atoi(argv[1]));
-	
-	
-	if (connect(sock, (struct sockaddr *) &sin, sizeof(sin)) != 0)
+	if (argc < 2)
 	{
-		perror("Connexion échouée ") ;
-		close(sock) ;
-		exit(1) ; 
-	 }
-	 
-	 if (read(sock,&tbuf,sizeof(int)) == -1)
-	 {
-		 perror("Ecriture ");
-		 close(sock);
-		 exit(1);
-	 }
-	 
-	 printf("Taille du buffer : %d\n",tbuf);
-	 
-	 buf = (char*)malloc(tbuf);
-	 if (buf == NULL)
-	 {
-		 perror("Malloc ");
-		 close(sock);
-		 exit(1);
+        printf("Pas assez d'arguments rentrés\n") ;
+		exit(1) ;
 	}
+	
+	if (argc < 3)
+	{
+		argv[2] = IPdefault ;
+	}
+	
+    init_sockaddr(&sin,argv[2],atoi(argv[1]));
+	
+	
+
 
 	while (next == 'o' || next == 'O')
-	{
-	
-		printf("Nom du fichier : ");
+    {
+
+        sock=socket(AF_INET,SOCK_STREAM,0);
+
+        if (connect(sock, (struct sockaddr *) &sin, sizeof(sin)) != 0)
+        {
+            perror("Connexion échouée ") ;
+            close(sock) ;
+            exit(1) ;
+         }
+
+         if (read(sock,&tbuf,sizeof(int)) == -1)
+         {
+             perror("Ecriture ");
+             close(sock);
+             exit(1);
+         }
+
+         printf("Taille du buffer : %d\n",tbuf);
+
+         buf = (char*)malloc(tbuf);
+         if (buf == NULL)
+         {
+             perror("Malloc ");
+             close(sock);
+             exit(1);
+        }
+
+		printf("Nom du fichier lors de l'écriture: ");
 		scanf("%s",buf);
 		write(sock,buf,tbuf);
 		
-		printf("Emplacement du fichier : ");
+		printf("Emplacement du fichier à ouvrir : ");
 		scanf("%s",buf);
 		
 		fic = open(buf,O_RDONLY);
@@ -101,6 +116,9 @@ int main(int argc, char **argv)
 			
 		}
 		
+        close(sock) ;
+        close(fic) ;
+        nbLu = 1 ;
 	printf("Envoyer un autre fichier (O/N) ? ");
 	scanf("%*c%c",&next);
 		

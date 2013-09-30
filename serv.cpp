@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 			list<Client*>::iterator i;
 			
 			client.push_front(new Client(accept(sock,(struct sockaddr *) &csin, &taille)));
-			printf("Client connecter\n");
+            printf("Client connecté\n");
 			i = client.begin();
 			tbuf = sizeof(buf);
 			printf("Taille du buffer : %lu\n",sizeof(buf));
@@ -175,6 +175,8 @@ int main(int argc, char **argv)
 						}
 						if (nbLu == 0)
 						{
+                            close((*i)->getSock()) ;
+                            close((*i)->getFd()) ;
 							i = client.erase(i);
 							continue;
 						}
