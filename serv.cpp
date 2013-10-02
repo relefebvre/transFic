@@ -64,20 +64,20 @@ int main(int argc, char **argv)
 	list<Client*> client; 
 	list<int> fd;
 	fd_set readfd;
-	
-	if (argc < 2)
+
+    if(argc >= 2 )
+        if ( sscanf(argv[1],"%u",&port) != 1  )
+        {
+            fprintf(stderr,"Numéro de port invalide\n");
+            close(sock);
+            exit(1);
+        }
+
+    if (argc < 2)
 	{
-		fprintf(stderr,"Argument invalide, numéro de port manquant\n"); 
-		close(sock);
-		exit(1);
+        port = 1025 ;
 	}
 	
-	if ( sscanf(argv[1],"%u",&port) != 1  )
-	{
-		fprintf(stderr,"Numéro de port invalide\n"); 
-		close(sock);
-		exit(1);
-	}
 	
 	if (sock+1 > Client::maxSock)
 		Client::maxSock = sock+1;

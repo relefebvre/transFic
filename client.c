@@ -31,13 +31,20 @@ int main(int argc, char **argv)
 	char *buf, next='o';
 	int fic, nbLu=1, tbuf;
     int sock ;
+    uint port ;
 	struct sockaddr_in sin;
 	char IPdefault[10] = "127.0.0.1" ;
+
+    if (argc >= 2)
+        if ( sscanf(argv[1],"%u",&port) != 1  )
+        {
+            fprintf(stderr,"Numéro de port invalide\n");
+            exit(1);
+        }
 	
 	if (argc < 2)
 	{
-        printf("Pas assez d'arguments rentrés\n") ;
-		exit(1) ;
+        port = 1025 ;
 	}
 	
 	if (argc < 3)
@@ -45,7 +52,7 @@ int main(int argc, char **argv)
 		argv[2] = IPdefault ;
 	}
 	
-    init_sockaddr(&sin,argv[2],atoi(argv[1]));
+    init_sockaddr(&sin,argv[2],port);
 	
 	
 
